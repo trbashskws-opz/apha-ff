@@ -1,0 +1,9 @@
+Package: com.alpha.ff
+Name: Alpha FF
+Version: 13.0.0
+Architecture: iphoneos-arm64
+Description: Alpha FF — iOS dylib with IL2CPP aimbot
+Maintainer: ALPHA
+Author: ALPHA
+Section: Tweaks
+Depends: mobilesubstrate

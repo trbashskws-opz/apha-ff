@@ -1,0 +1,40 @@
+name: Build Alpha FF dylib
+
+on:
+  push: { branches: [ main, master ] }
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Theos
+        run: |
+          export THEOS=$HOME/theos
+          mkdir -p $THEOS
+          git clone --recursive --depth 1 https://github.com/theos/theos.git $THEOS
+          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+          echo "$HOME/theos/bin" >> $GITHUB_PATH
+      
+      - name: Build package
+        env:
+          THEOS: ${{ env.THEOS }}
+        run: |
+          make clean || true
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+      
+      - name: Extract dylib + deb
+        run: |
+          mkdir -p /tmp/out
+          find .theos -name "AlphaFF.dylib" -exec cp {} /tmp/out/ \;
+          cp packages/*.deb /tmp/out/ 2>/dev/null || true
+          ls -la /tmp/out/
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AlphaFF
+          path: |
+            packages/*.deb
+            /tmp/out/*
