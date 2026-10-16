@@ -11,6 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug — show tree
+        run: |
+          echo "=== files in workspace ==="
+          ls -la
+          echo "=== Makefile ==="
+          cat Makefile || echo "NO MAKEFILE"
+          echo "=== control ==="
+          cat control || echo "NO CONTROL"
+
       - name: Install Theos
         run: |
           export THEOS=$HOME/theos
@@ -19,23 +28,29 @@ jobs:
           echo "THEOS=$HOME/theos" >> $GITHUB_ENV
           echo "$HOME/theos/bin" >> $GITHUB_PATH
 
+      - name: Install toolchain
+        run: |
+          echo "THEOS=$THEOS"
+          ls -la $THEOS/bin/ | head
+          $THEOS/bin/nic.pl --version || true
+
       - name: Build package
         env:
           THEOS: ${{ env.THEOS }}
         run: |
           make clean || true
-          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless V=1 2>&1 | tee /tmp/build.log
+          echo "exit code: $?"
 
-      - name: Extract dylib
+      - name: Show tail of log on failure
+        if: failure()
         run: |
-          mkdir -p /tmp/out
-          find .theos -name "AlphaFF.dylib" -exec cp {} /tmp/out/ \;
-          cp packages/*.deb /tmp/out/ 2>/dev/null || true
-          ls -la /tmp/out/
+          echo "=== LAST 80 LINES OF BUILD LOG ==="
+          tail -80 /tmp/build.log
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: AlphaFF
-          path: |
-            packages/*.deb
-            /tmp/out/*
+          name: build-log
+          path: /tmp/build.log
