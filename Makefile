@@ -8,6 +8,7 @@ TWEAK_NAME = AlphaFF
 AlphaFF_FILES = Tweak.xm
 AlphaFF_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
 AlphaFF_FRAMEWORKS = UIKit WebKit Foundation CoreGraphics
+AlphaFF_LIBRARIES = 
 AlphaFF_PRIVATE_FRAMEWORKS =
 
 include $(THEOS_MAKE_PATH)/tweak.mk
