@@ -13,12 +13,14 @@ jobs:
 
       - name: Debug — show tree
         run: |
-          echo "=== files in workspace ==="
+          echo "=== workspace files ==="
           ls -la
           echo "=== Makefile ==="
-          cat Makefile || echo "NO MAKEFILE"
+          cat Makefile || true
           echo "=== control ==="
-          cat control || echo "NO CONTROL"
+          cat control || true
+          echo "=== Tweak.xm (head) ==="
+          head -20 Tweak.xm || true
 
       - name: Install Theos
         run: |
@@ -31,22 +33,22 @@ jobs:
       - name: Install toolchain
         run: |
           echo "THEOS=$THEOS"
-          ls -la $THEOS/bin/ | head
-          $THEOS/bin/nic.pl --version || true
+          ls -la $THEOS/bin/ | head -20
 
       - name: Build package
         env:
           THEOS: ${{ env.THEOS }}
         run: |
-          make clean || true
+          set -o pipefail    # ← مهم جدًا — ينقل exit code الفعلي
+          make clean 2>&1 || true
           make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless V=1 2>&1 | tee /tmp/build.log
-          echo "exit code: $?"
+          # لا نستخدم || true هنا
 
       - name: Show tail of log on failure
         if: failure()
         run: |
-          echo "=== LAST 80 LINES OF BUILD LOG ==="
-          tail -80 /tmp/build.log
+          echo "=== LAST 100 LINES OF BUILD LOG ==="
+          tail -100 /tmp/build.log
 
       - name: Upload log
         if: always()
